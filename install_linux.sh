@@ -13,31 +13,42 @@ command_exists() {
 }
 
 install_prerequisite() {
-    command_exists brew || {
-        fmt_error "brew is not installed"
-        exit 1
-    }
-
-    brew install \
+    DbEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
         black \
+        build-essential \
+        cargo \
+        clang \
         clang-format \
         cmake \
         curl \
         git \
-        go \
+        golang-1.18 \
         pylint \
-        python \
-        llvm \
-        ripgrep \
-        rust \
+        python3 \
+        python3-pip \
+        python3-dev \
         rustfmt \
         shellcheck \
-        shfmt \
-        staticcheck \
         vim \
-        vint \
         zsh || {
         fmt_error "failed to install prerequisite, check the error output to see how to fix it"
+        exit 1
+    }
+
+    # fix soft link to golang-1.18
+    sudo update-alternatives --install /usr/bin/go golang /usr/lib/go-1.18/bin/go 0
+
+    # missing shfmt, staticcheck and vint
+    go install honnef.co/go/tools/cmd/staticcheck@latest || {
+        fmt_error "failed to install staticcheck"
+        exit 1
+    }
+    go install mvdan.cc/sh/v3/cmd/shfmt@latest || {
+        fmt_error "failed to install shfmt"
+        exit 1
+    }
+    pip3 install --user vim-vint || {
+        fmt_error "failed to install vim-vint"
         exit 1
     }
 }
