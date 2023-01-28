@@ -1,11 +1,11 @@
 #!/bin/bash
 
 fmt_info() {
-    printf 'Info: %s\n' "$*" >&1
+    printf '\033[32mInfo\033[0m: %s\n' "$*" >&1
 }
 
 fmt_error() {
-    printf 'Error: %s\n' "$*" >&2
+    printf '\033[31mError\033[0m: %s\n' "$*" >&2
 }
 
 command_exists() {
@@ -20,7 +20,6 @@ install_prerequisite() {
 
     brew install \
         black \
-        clang-format \
         cmake \
         curl \
         git \
@@ -43,7 +42,7 @@ install_prerequisite() {
 }
 
 setup_vim() {
-    fmt_info "starting set up vim ..."
+    fmt_info "starting setup vim ..."
 
     fmt_info "installing vim-plug ..."
     curl -fLo "$HOME"/.vim/autoload/plug.vim --create-dirs \
@@ -51,19 +50,19 @@ setup_vim() {
         fmt_error "failed to download vim-plug, try again later"
         exit 1
     }
-    fmt_info "succeed."
+    fmt_info "vim-plug installation succeed."
 
-    fmt_info "cloning vimrc ..."
+    fmt_info "cloning vim configuration ..."
     git submodule update --init vimrc || {
         fmt_error "failed to clone vimrc, tray again later"
         exit 1
     }
-    fmt_info "succeed."
+    fmt_info "vim configuration clone succeed."
 
     fmt_info "creating .vimrc ..."
     [ -e "$HOME"/.vimrc ] && mv "$HOME"/.vimrc "$HOME"/.vimrc.old
     ln -s "$(pwd)"/vimrc/vimrc "$HOME"/.vimrc
-    fmt_info "succeed."
+    fmt_info ".vimrc creation succeed."
 
     fmt_info "install YouCompleteMe ..."
     vim -c PlugInstall && {
@@ -73,43 +72,28 @@ setup_vim() {
         python3 "$ycm_dir"/install.py --go-completer
         python3 "$ycm_dir"/install.py --rust-completer
     }
-    fmt_info "succeed."
+    fmt_info "YouCompleteMe installation succeed."
 
     fmt_info "vim setup finished."
 }
 
 setup_omz() {
-    fmt_info "starting set up oh-my-zsh ..."
+    fmt_info "starting setup oh-my-zsh ..."
 
     fmt_info "installing oh-my-zsh ..."
     bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || {
         fmt_error "failed to install oh-my-zsh"
         exit 1
     }
-    fmt_info "succeed."
+    fmt_info "oh-my-zsh installation succeed."
 
     fmt_info "oh-my-zsh setup finished."
 }
 
 main() {
-    opt_vim=0
-    opt_omz=0
-    # parse arguments
-    while [ $# -gt 0 ]; do
-        case $1 in
-            --omz) opt_omz=1 ;;
-            --vim) opt_vim=1 ;;
-            --all)
-                opt_omz=1
-                opt_vim=1
-                ;;
-        esac
-        shift
-    done
-
-    [ $opt_omz -eq 1 ] || [ $opt_vim -eq 1 ] && install_prerequisite
-    [ $opt_omz -eq 1 ] && setup_omz
-    [ $opt_vim -eq 1 ] && setup_vim
+    install_prerequisite
+    setup_omz
+    setup_vim
 }
 
 cd "$(dirname "$0")" && main "$@"
